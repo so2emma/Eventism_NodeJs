@@ -1,2 +1,3 @@
 # files that will not pushed to git
 /node_modules
+/.env
