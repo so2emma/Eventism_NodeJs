@@ -1,7 +1,7 @@
 const { body, validationResult } = require("express-validator");
 const Roles = require("../../utils/roles");
 
-const userValidationRules = () => {
+const signUpValidationRules = () => {
   return [
     body("firstname")
       .isLength({ min: 1 })
@@ -16,14 +16,16 @@ const userValidationRules = () => {
     body("password")
       .isLength({ min: 8 })
       .withMessage("Password should not be less than 8 characters"),
-    // body("role").custom((value) => {
-    //   if(!value.isEmpty){
-    //     if (!Object.values(Roles).includes(value)) {
-    //       throw new Error("Invalid role");
-    //     }
-    //   }
-    //   return true;
-    // }),
+    body("role").custom((value) => {
+      if(value === undefined || value === null || value === ""){
+        return true;
+      }else {
+        if (!Object.values(Roles).includes(value)) {
+          throw new Error("Invalid role");
+        }
+      }
+      return true;
+    }),
   ];
 };
 
@@ -35,4 +37,4 @@ const checkValidation = (req, res, next) => {
   next();
 };
 
-module.exports = [userValidationRules(), checkValidation];
+module.exports = [signUpValidationRules(), checkValidation];
