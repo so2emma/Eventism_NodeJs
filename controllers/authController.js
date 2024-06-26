@@ -1,5 +1,6 @@
 const {validationResult} = require("express-validator");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const User = require("../models/user")
 const Roles = require('../utils/roles')
 
@@ -47,6 +48,36 @@ exports.signup = async (req, res, next) => {
     }
 };
 
-// exports.login = (req, res, next) => {
-//
-// }
+exports.login = async (req, res, next) => {
+    const {email, password, role} = req.body;
+
+    try{
+        const user = await User.findOne({ email: email });
+        if (!user) {
+            const error = new Error("Email or password is incorrect");
+            error.statusCode = 401;
+            throw error;
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if(!isMatch){
+            const error = new Error("Email or password is incorrect");
+            error.statusCode = 401;
+            throw error;
+        }
+            const token = jwt.sign(
+                {email, password, role:user.role },
+                'secretKey',
+                {expiresIn: '1h'});
+                res.status(200).json({token: token, userId: user._id.toString()});
+
+    }catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+
+
+    res.status('200').json({status: "success"})
+}

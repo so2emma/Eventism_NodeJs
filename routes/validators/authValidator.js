@@ -1,7 +1,7 @@
 const { body, validationResult } = require("express-validator");
 const Roles = require("../../utils/roles");
 
-const signUpValidationRules = () => {
+exports.signUpValidationRules = () => {
   return [
     body("firstname")
       .isLength({ min: 1 })
@@ -29,12 +29,17 @@ const signUpValidationRules = () => {
   ];
 };
 
-const checkValidation = (req, res, next) => {
+exports.loginValidationRules = () => {
+  return [
+      body("email").isEmail().withMessage("Email is invalid"),
+      body("password").isLength({ min: 8 }),
+  ];
+}
+
+exports.checkValidation = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
   next();
 };
-
-module.exports = [signUpValidationRules(), checkValidation];
