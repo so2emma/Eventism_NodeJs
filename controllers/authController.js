@@ -1,11 +1,12 @@
 const {validationResult} = require("express-validator");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+require('dotenv').config()
 const User = require("../models/user")
 const Roles = require('../utils/roles')
 
 exports.signup = async (req, res, next) => {
-    const { firstname, lastname, username, email, password, role: userRole } = req.body;
+    const {firstname, lastname, username, email, password, role: userRole} = req.body;
 
     let role = userRole;
     if (!role) {
@@ -13,14 +14,14 @@ exports.signup = async (req, res, next) => {
     }
 
     try {
-        const existingUserByEmail = await User.findOne({ email: email });
+        const existingUserByEmail = await User.findOne({email: email});
         if (existingUserByEmail) {
             const error = new Error("Email is not available");
             error.statusCode = 401;
             throw error;
         }
 
-        const existingUserByUsername = await User.findOne({ username: username });
+        const existingUserByUsername = await User.findOne({username: username});
         if (existingUserByUsername) {
             const error = new Error("Username is not available");
             error.statusCode = 401;
@@ -39,7 +40,7 @@ exports.signup = async (req, res, next) => {
         });
 
         const result = await user.save();
-        res.status(201).json({ message: "User created", userId: result._id });
+        res.status(201).json({message: "User created", userId: result._id});
     } catch (err) {
         if (!err.statusCode) {
             err.statusCode = 500;
@@ -49,10 +50,10 @@ exports.signup = async (req, res, next) => {
 };
 
 exports.login = async (req, res, next) => {
-    const {email, password, role} = req.body;
+    const {email, password} = req.body;
 
-    try{
-        const user = await User.findOne({ email: email });
+    try {
+        const user = await User.findOne({email: email});
         if (!user) {
             const error = new Error("Email or password is incorrect");
             error.statusCode = 401;
@@ -60,24 +61,21 @@ exports.login = async (req, res, next) => {
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if(!isMatch){
+        if (!isMatch) {
             const error = new Error("Email or password is incorrect");
             error.statusCode = 401;
             throw error;
         }
-            const token = jwt.sign(
-                {email, password, role:user.role },
-                'secretKey',
-                {expiresIn: '1h'});
-                res.status(200).json({token: token, userId: user._id.toString()});
+        const token = jwt.sign(
+            {email, role: user.role},
+            process.env.SECRET_KEY,
+            {expiresIn: '1h'});
+        res.status(200).json({token: token, userId: user._id.toString(), email: user.email});
 
-    }catch (err) {
+    } catch (err) {
         if (!err.statusCode) {
             err.statusCode = 500;
         }
         next(err);
     }
-
-
-    res.status('200').json({status: "success"})
 }

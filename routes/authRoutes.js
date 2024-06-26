@@ -11,6 +11,6 @@ const router = express.Router();
 
 router.post('/signup', signUpValidationRules(), authController.signup)
 
-router.post('/login', loginValidationRules, authController.login)
+router.post('/login', loginValidationRules(), authController.login)
 
 module.exports = router;
