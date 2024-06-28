@@ -9,7 +9,9 @@ const app = express();
 
 // Location of the routes
 const authRoutes = require('./routes/authRoutes.js');
+const eventRoutes = require('./routes/eventRoutes.js');
 const {validateAuthenticated, authorizeRole} = require("./middleware/authMiddleware");
+
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -18,14 +20,19 @@ app.use(cors());
 app.use('/index', (req, res) => {
     console.log('This is hitting the routes')
 })
-app.use('/auth', authRoutes);
 
+app.use('/auth', authRoutes);
+app.use('/organized', eventRoutes);
+
+
+//this is for testing the validation for authenticated routes
 app.use('/validate', validateAuthenticated(), authorizeRole('admin'), (req, res) => {
     console.log('The user has been authenticated');
     res.send('User authenticated and authorized');
 })
 
 
+// this route is for error handling
 app.use((error, req, res, next) => {
     console.log(error);
     const status = error.statusCode || 500;
@@ -33,6 +40,7 @@ app.use((error, req, res, next) => {
     const data = error.data;
     res.status(status).json({message: message, data: data});
 });
+
 
 // getting them from our .env
 const username = process.env.MONGODB_USERNAME;

@@ -1,9 +1,8 @@
-const {validationResult} = require("express-validator");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-require('dotenv').config()
-const User = require("../models/user")
-const Roles = require('../utils/roles')
+require('dotenv').config();
+const User = require("../models/user");
+const Roles = require('../utils/roles');
 
 exports.signup = async (req, res, next) => {
     const {firstname, lastname, username, email, password, role: userRole} = req.body;
