@@ -10,6 +10,7 @@ const app = express();
 // Location of the routes
 const authRoutes = require('./routes/authRoutes.js');
 const eventRoutes = require('./routes/eventRoutes.js');
+const ticketRoutes = require('./routes/ticketRoutes.js');
 const {validateAuthenticated, authorizeRole} = require("./middleware/authMiddleware");
 
 
@@ -23,6 +24,7 @@ app.use('/index', (req, res) => {
 
 app.use('/auth', authRoutes);
 app.use('/organized', eventRoutes);
+app.use('/events', ticketRoutes);
 
 
 //this is for testing the validation for authenticated routes
