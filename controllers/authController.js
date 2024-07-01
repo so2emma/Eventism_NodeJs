@@ -66,7 +66,7 @@ exports.login = async (req, res, next) => {
             throw error;
         }
         const token = jwt.sign(
-            {email, role: user.role},
+            {id: user._id, email, role: user.role},
             process.env.SECRET_KEY,
             {expiresIn: '1h'});
         res.status(200).json({token: token, userId: user._id.toString(), email: user.email});
