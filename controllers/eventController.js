@@ -1,5 +1,7 @@
 const Event = require('../models/event')
 const User = require('../models/user')
+const fs = require('fs')
+const path = require("path");
 
 exports.getEvents = async (req, res, next) => {
     try {
@@ -51,7 +53,7 @@ exports.createEvent = async (req, res, next) => {
     const {title, description, date, location, category} = req.body;
     console.log(req.user);
 
-    const user = await User.findOne({email: req.user.email});
+
 
 
     try {
@@ -69,12 +71,12 @@ exports.createEvent = async (req, res, next) => {
             location,
             category,
             image: imageUrl,
-            organizer: user._id,
+            organizer: req.user.id,
         });
 
         const createdEvent = await event.save();
 
-        const creator = await User.findById(user._id);
+        const creator = await User.findById(req.user.id);
         creator.organizedEvents.push(createdEvent);
 
         res.status(201).json({
@@ -93,6 +95,7 @@ exports.createEvent = async (req, res, next) => {
 exports.updateEvent = async (req, res, next) => {
     const eventId = req.params.eventId;
     const {title, description, date, location, category} = req.body;
+    let imageUrl;
     try {
         const event = await Event.findById(eventId);
 
@@ -101,11 +104,31 @@ exports.updateEvent = async (req, res, next) => {
             error.statusCode = 404;
             throw error;
         }
+
+        if (event.organizer.toString() !== req.user.id.toString()) {
+            const error = new Error('Not authorized to update this event');
+            error.statusCode = 403;
+            throw error;
+        }
+
+        if (req.file) {
+            if (event.image) {
+                const imagePath = path.join(__dirname, '..', event.image);
+                fs.unlinkSync(imagePath);
+            }
+
+            // Set new image path
+            imageUrl = req.file.path.replace("\\", "/");
+        }
+
         event.title = title;
         event.description = description;
         event.date = date;
         event.location = location;
         event.category = category;
+        if (imageUrl) {
+            event.image = imageUrl;
+        }
         const updatedEvent = await event.save();
         res.status(200).json({message: 'Event updated', event: updatedEvent});
 
@@ -126,8 +149,19 @@ exports.deleteEvent = async (req, res, next) => {
             error.statusCode = 404;
             throw error;
         }
-        event.findByIdAndDelete(eventId);
-        res.status(200).json({message: 'Event deleted', event: event});
+
+        if (event.organizer.toString() !== req.user.id.toString()) {
+            const error = new Error('Not authorized to Delete this event');
+            error.statusCode = 403;
+            throw error;
+        }
+        if (event.image) {
+            const imagePath = path.join(__dirname, '..', event.image);
+            fs.unlinkSync(imagePath);
+        }
+
+        await event.findByIdAndDelete(eventId);
+        res.status(200).json({message: 'Event deleted Successfully', event: event});
 
     } catch (err) {
         if (!err.statusCode) {
