@@ -78,3 +78,24 @@ exports.login = async (req, res, next) => {
         next(err);
     }
 }
+
+exports.getUsers = async (req, res, next) => {
+    try{
+        const users  = await User.find().select('-password');
+        if(users.length === 0){
+            const error = new Error("No User has been registered");
+            error.statusCode = 404;
+            throw error;
+        }
+
+        res.status(200).json({
+            message: 'Users Found Successfully',
+            users: users
+        });
+    }catch(err){
+        if(!err.statusCode){
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+}

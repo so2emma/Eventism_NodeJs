@@ -10,4 +10,6 @@ router.post('/signup', signUpValidationRules(), authController.signup)
 
 router.post('/login', loginValidationRules(), authController.login)
 
+router.get('/users', authController.getUsers)
+
 module.exports = router;

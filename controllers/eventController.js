@@ -49,14 +49,38 @@ exports.getEvent = async (req, res, next) => {
 
 exports.createEvent = async (req, res, next) => {
     const {title, description, date, location, category} = req.body;
+    console.log(req.user);
+
+    const user = await User.findOne({email: req.user.email});
+
 
     try {
+        if(!req.file) {
+            const error = new Error('No image provided');
+            error.statusCode = 422;
+            throw error;
+        }
+
+        const imageUrl = req.file.path.replace("\\", "/");
         const event = new Event({
-            title, description, date, location, category
+            title,
+            description,
+            date,
+            location,
+            category,
+            image: imageUrl,
+            organizer: user._id,
         });
 
-        const createdEvent = await event.save()
-        res.status(201).json({message: 'Event created', event: createdEvent});
+        const createdEvent = await event.save();
+
+        const creator = await User.findById(user._id);
+        creator.organizedEvents.push(createdEvent);
+
+        res.status(201).json({
+            message: 'Event created',
+            event: createdEvent,
+            creator: {id: creator._id, name: creator.name},});
 
     } catch (err) {
         if (!err.statusCode) {

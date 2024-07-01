@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 
 require('dotenv').config()
 
@@ -12,10 +14,33 @@ const authRoutes = require('./routes/authRoutes.js');
 const eventRoutes = require('./routes/eventRoutes.js');
 const ticketRoutes = require('./routes/ticketRoutes.js');
 const {validateAuthenticated, authorizeRole} = require("./middleware/authMiddleware");
+const path = require("path");
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "images");
+    },
+    filename: (req, file, cb) => {
+        cb(null, uuidv4() + "_" + Date.now() + file.originalname);
+    },
+});
+
+const fileFilter = (req, file, cb) => {
+    if(file.mimetype === 'image/png' ||
+        file.mimetype === 'image/jpeg' ||
+         file.mimetype === 'image/gif'
+    ) {
+        cb(null, true);
+    }else {
+        cb(null, false);
+    }
+};
 
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
+app.use(multer({storage: storage, fileFilter: fileFilter}).single('image'))
+app.use("/images", express.static(path.join(__dirname, "images")));
 app.use(cors());
 
 app.use('/index', (req, res) => {
@@ -24,7 +49,7 @@ app.use('/index', (req, res) => {
 
 app.use('/auth', authRoutes);
 app.use('/organized', eventRoutes);
-app.use('/events', ticketRoutes);
+// app.use('/events', ticketRoutes);
 
 
 //this is for testing the validation for authenticated routes
